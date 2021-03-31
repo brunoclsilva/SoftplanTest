@@ -7,7 +7,6 @@ EXPOSE 80
 FROM mcr.microsoft.com/dotnet/core/sdk:3.1-buster AS build
 WORKDIR /src
 COPY ["SoftplanTest.Api2/SoftplanTest.Api2.csproj", "SoftplanTest.Api2/"]
-COPY ["SoftplanTest.Api2.Infrastructure/SoftplanTest.Api2.Infrastructure.csproj", "SoftplanTest.Api2.Infrastructure/"]
 RUN dotnet restore "SoftplanTest.Api2/SoftplanTest.Api2.csproj"
 COPY . .
 WORKDIR "/src/SoftplanTest.Api2"
@@ -19,7 +18,4 @@ RUN dotnet publish "SoftplanTest.Api2.csproj" -c Release -o /app/publish
 FROM base AS final
 WORKDIR /app
 COPY --from=publish /app/publish .
-ENTRYPOINT ["dotnet", "ap2.dll"]
-
-# docker build -t api2 -f SoftplanTest.Api2/Dockerfile .
-# docker run -d -p 8082:80 --name myapp2 api2
+ENTRYPOINT ["dotnet", "SoftplanTest.Api2.dll"]
