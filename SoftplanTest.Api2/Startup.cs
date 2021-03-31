@@ -1,14 +1,12 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
+using SoftplanTest.Api2.Infrastructure.Interfaces;
+using SoftplanTest.Api2.Infrastructure.Services;
 
 namespace SoftplanTest.Api2
 {
@@ -21,19 +19,41 @@ namespace SoftplanTest.Api2
 
         public IConfiguration Configuration { get; }
 
-        // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddControllers();
+            RegisterInitialConfigs(services);
+
+            RegisterServices(services);
+
+            RegisterRepositories(services);
+
+            services.AddControllers().AddNewtonsoftJson(
+                options =>
+                {
+                    options.SerializerSettings.ReferenceLoopHandling = ReferenceLoopHandling.Ignore;
+                });
+
+            services.AddSwaggerGen();
         }
 
-        // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
+        private static void RegisterInitialConfigs(IServiceCollection services)
+        {
+            services.AddHttpClient();
+        }
+
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
             }
+
+            app.UseSwagger();
+
+            app.UseSwaggerUI(c =>
+            {
+                c.SwaggerEndpoint("/swagger/v1/swagger.json", "My API V1");
+            });
 
             app.UseRouting();
 
@@ -43,6 +63,16 @@ namespace SoftplanTest.Api2
             {
                 endpoints.MapControllers();
             });
+        }
+
+        private static void RegisterRepositories(IServiceCollection services)
+        {
+            services.AddSingleton<ILogger, Logger<object>>();
+        }
+
+        private static void RegisterServices(IServiceCollection services)
+        {
+            services.AddSingleton<ICalculaJurosService, CalculaJurosService>();
         }
     }
 }
