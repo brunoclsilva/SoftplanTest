@@ -17,32 +17,53 @@ namespace SoftplanTest.Api2.Infrastructure.Services
 
         public async Task<decimal> CalculaJurosAsync(decimal valorInicial, int tempo)
         {
-            var taxaJuros = await GetTaxaJurosApi();
+            try
+            {
+                if (valorInicial >= 0 && tempo >= 0)
+                {
+                    var taxaJuros = await GetTaxaJurosApi();
 
-            var valorFinal = valorInicial * Convert.ToDecimal(Math.Pow((Convert.ToDouble(1 + taxaJuros)), tempo));
+                    var valorFinal = valorInicial * Convert.ToDecimal(Math.Pow((Convert.ToDouble(1 + taxaJuros)), tempo));
 
-            return Math.Truncate(100 * valorFinal) / 100;
+                    return Math.Truncate(100 * valorFinal) / 100;
+                }
+                else
+                {
+                    throw new Exception("Os parâmetros valorInicial e tempo devem ser maiores ou iguais a zero");
+                }
+            }
+            catch (Exception e)
+            {
+                throw new Exception(e.Message);
+            }
         }
 
         public async Task<decimal> GetTaxaJurosApi()
         {
-            var client = _clientFactory.CreateClient();
-            client.BaseAddress = new Uri("http://localhost:5001");
-
-            decimal taxaJuros = 0.00m;
-
-            var response = await client.GetAsync($"taxaJuros");
-
-            if (response.IsSuccessStatusCode)
+            try
             {
-                var resultado = await response.Content.ReadAsStringAsync();
+                var client = _clientFactory.CreateClient();
+                client.BaseAddress = new Uri("http://localhost:5001");
 
-                var obj = JsonConvert.DeserializeObject<decimal>(resultado);
+                var response = await client.GetAsync($"taxaJuros");
 
-                taxaJuros = obj;
+                if (response.IsSuccessStatusCode)
+                {
+                    var resultado = await response.Content.ReadAsStringAsync();
+
+                    var taxaJuros = JsonConvert.DeserializeObject<decimal>(resultado);
+
+                    return taxaJuros;
+                }
+                else
+                {
+                    throw new Exception("Erro ao acessar API");
+                }
             }
-
-            return taxaJuros;
+            catch (Exception e)
+            {
+                throw new Exception(e.Message);
+            }
         }
     }
 }
